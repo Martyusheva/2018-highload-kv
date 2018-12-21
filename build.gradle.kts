@@ -17,12 +17,17 @@ dependencies {
     // Annotations for better code documentation
     compile("com.intellij:annotations:12.0")
 
+    // https://mvnrepository.com/artifact/org.iq80.leveldb/leveldb
+    compile("org.iq80.leveldb:leveldb:0.10")
+
     // JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 
     // Guava for tests
     testCompile("com.google.guava:guava:23.1-jre")
+
+
 }
 
 tasks {
