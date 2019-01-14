@@ -41,9 +41,7 @@ public class KVDaoImpl implements KVDao{
 
     @Override
     public void remove(byte[] key) {
-        //db.delete(key);
         db.delete(key);
-        db.put(key, bytes("deleted"));
     }
 
     @Override

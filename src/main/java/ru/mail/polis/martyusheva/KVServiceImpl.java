@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static java.lang.Math.abs;
-import static org.iq80.leveldb.impl.Iq80DBFactory.asString;
 import static ru.mail.polis.martyusheva.ReqRespProcessor.*;
 
 /**
@@ -23,6 +23,7 @@ public class KVServiceImpl extends HttpServer implements KVService{
     private HttpClient me = null;
 
     private RequestProcessor requestProcessor;
+    private final ConcurrentSkipListSet<String> removedValues = new ConcurrentSkipListSet<>();
     private static final String SPLITTER = " ";
 
     public KVServiceImpl(HttpServerConfig config, KVDao dao, Set<String> topology) throws IOException{
@@ -124,6 +125,9 @@ public class KVServiceImpl extends HttpServer implements KVService{
                 }
             }
 
+//            if (ack >= requestProcessor.getAck() )
+//                removedValues.remove(id);
+
             return ack >= requestProcessor.getAck() ?
                     new Response(Response.CREATED, Response.EMPTY) :
                     new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
@@ -154,22 +158,19 @@ public class KVServiceImpl extends HttpServer implements KVService{
                     responseProcessor.put(new Response(Response.INTERNAL_ERROR, Response.EMPTY), node);
                 }
             }
-//            return ack >= requestProcessor.getAck() ?
-//                    new Response(Response.OK, ) :
-//                    new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
-            return responseProcessor.getResponse();
+            return removedValues.contains(id) ? new Response(Response.NOT_FOUND, Response.EMPTY) : responseProcessor.getResponse();
         }
     }
 
     private Response localGet(String id) {
         try {
             byte[] value = dao.get(id.getBytes());
-//            if (value != null)
-//                return new Response(Response.OK, value);
-            if (value != null && !asString(value).equals("deleted"))
+            if (value != null)
                 return new Response(Response.OK, value);
-            else if (asString(value).equals("deleted"))
-                return new Response(Response.FORBIDDEN, Response.EMPTY);
+//            if (value != null && !asString(value).equals("deleted"))
+//                return new Response(Response.OK, value);
+//            else if (asString(value).equals("deleted"))
+//                return new Response(Response.FORBIDDEN, Response.EMPTY);
             else
                 return new Response(Response.NOT_FOUND, Response.EMPTY);
         } catch (IOException ioe){
@@ -182,6 +183,7 @@ public class KVServiceImpl extends HttpServer implements KVService{
     private Response remove (final String id, final  boolean proxied){
         if (proxied){
             dao.remove(id.getBytes());
+            removedValues.add(id);
             return new Response(Response.ACCEPTED, Response.EMPTY);
         } else {
             ArrayList<HttpClient> nodes = getNodes(id);
@@ -197,6 +199,9 @@ public class KVServiceImpl extends HttpServer implements KVService{
                     //LOGGER?
                 }
             }
+
+            if (ack >= requestProcessor.getAck())
+                removedValues.add(id);
 
             return ack >= requestProcessor.getAck() ?
                     new Response(Response.ACCEPTED, Response.EMPTY) :

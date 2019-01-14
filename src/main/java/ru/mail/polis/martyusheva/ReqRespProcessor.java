@@ -62,12 +62,13 @@ public class ReqRespProcessor {
 
         public Response getResponse() {
             if (getSuccessAckAmount() >= condition) {
-                if (getRemovedAmount() > 0) {
-                    return new Response(Response.NOT_FOUND, Response.EMPTY);
-                }
-                else {
-                    return lastSucResponse.getResponse();
-                }
+                return lastSucResponse.getResponse();
+//                if (getRemovedAmount() > 0) {
+//                    return new Response(Response.NOT_FOUND, Response.EMPTY);
+//                }
+//                else {
+//                    return lastSucResponse.getResponse();
+//                }
             }
             else
                 return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
