@@ -9,6 +9,8 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 
+import static org.iq80.leveldb.impl.Iq80DBFactory.bytes;
+
 /**
  * Created by moresmart on 13.12.18.
  */
@@ -39,7 +41,9 @@ public class KVDaoImpl implements KVDao{
 
     @Override
     public void remove(byte[] key) {
+        //db.delete(key);
         db.delete(key);
+        db.put(key, bytes("deleted"));
     }
 
     @Override
