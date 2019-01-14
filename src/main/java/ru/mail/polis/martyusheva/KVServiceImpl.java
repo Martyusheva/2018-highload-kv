@@ -41,26 +41,17 @@ public class KVServiceImpl extends HttpServer implements KVService{
         });
     }
 
+    @Override
+    public void handleDefault(Request request, HttpSession session) throws IOException {
+        Response response = new Response(Response.BAD_REQUEST, Response.EMPTY);
+        session.sendResponse(response);
+    }
+
     @Path(STATUS_PATH)
     public void status(Request request, HttpSession session) throws IOException{
         session.sendResponse(Response.ok(Response.EMPTY));
     }
 
-    private RequestProcessor buildRequestProcessor (String replicas){
-        return  replicas == null ?
-                new RequestProcessor(nodes.size()) :
-                (replicas.isEmpty() ?
-                        new RequestProcessor(nodes.size()) :
-                        new RequestProcessor(replicas, nodes.size()));
-    }
-
-    private String buildString (String splitter, String... chunks) {
-        StringBuilder builder = new StringBuilder();
-        for (String s: chunks) {
-            builder.append(s).append(splitter);
-        }
-        return builder.toString();
-    }
 
     @Path(ENTITY_PATH)
     public void entity(Request request, HttpSession session) throws IOException{
@@ -102,12 +93,8 @@ public class KVServiceImpl extends HttpServer implements KVService{
 
     private Response upsert(final String id, final  byte[] value, final boolean proxied){
         if(proxied){
-            try {
-                dao.upsert(id.getBytes(), value);
-                return new Response(Response.CREATED, Response.EMPTY);
-            } catch (IOException ioe){
-                return new Response(Response.INTERNAL_ERROR, Response.EMPTY);
-            }
+            dao.upsert(id.getBytes(), value);
+            return new Response(Response.CREATED, Response.EMPTY);
         } else {
             ArrayList<HttpClient> nodes = getNodes(id);
 
@@ -140,19 +127,13 @@ public class KVServiceImpl extends HttpServer implements KVService{
         } else {
             ArrayList<HttpClient> nodes = getNodes(id);
 
-//            int ack = 0;
             ResponseProcessor responseProcessor = new ResponseProcessor(requestProcessor.getAck());
             for (HttpClient node : nodes) {
                 try {
                     if (node == me) {
                         responseProcessor.put(localGet(id), node);
-//                        if (localGet(id).getStatus() == HTTP_CODE_OK)
-//                            ack++;
                     } else
                         responseProcessor.put(sendProxied(HttpMethod.GET, node, id, null), node);
-//                        if (sendProxied(HttpMethod.GET, node, id, null).getStatus() == HTTP_CODE_OK){
-//                        ack++;
-//                    }
                 } catch(Exception e){
                     //LOGGER?
                     responseProcessor.put(new Response(Response.INTERNAL_ERROR, Response.EMPTY), node);
@@ -165,16 +146,7 @@ public class KVServiceImpl extends HttpServer implements KVService{
     private Response localGet(String id) {
         try {
             byte[] value = dao.get(id.getBytes());
-            if (value != null)
-                return new Response(Response.OK, value);
-//            if (value != null && !asString(value).equals("deleted"))
-//                return new Response(Response.OK, value);
-//            else if (asString(value).equals("deleted"))
-//                return new Response(Response.FORBIDDEN, Response.EMPTY);
-            else
-                return new Response(Response.NOT_FOUND, Response.EMPTY);
-        } catch (IOException ioe){
-            return new Response(Response.INTERNAL_ERROR, Response.EMPTY);
+            return new Response(Response.OK, value);
         } catch (NoSuchElementException nSEE) {
             return new Response(Response.NOT_FOUND, Response.EMPTY);
         }
@@ -233,7 +205,11 @@ public class KVServiceImpl extends HttpServer implements KVService{
         return result;
     }
 
-    public void handleDefaulte(Request request, HttpSession session) throws IOException {
-        session.sendError(Response.NOT_FOUND, null);
+    private RequestProcessor buildRequestProcessor (String replicas){
+        return  replicas == null ?
+                new RequestProcessor(nodes.size()) :
+                (replicas.isEmpty() ?
+                        new RequestProcessor(nodes.size()) :
+                        new RequestProcessor(replicas, nodes.size()));
     }
 }

@@ -35,8 +35,8 @@ public class ReqRespProcessor {
 
     public static class ResponseProcessor {
         private final int condition;
-        private final ArrayList<ResponseHolder> responses = new ArrayList<>();
-        private ResponseHolder lastSucResponse = new ResponseHolder(null, null);
+        private final ArrayList<Response> responses = new ArrayList<>();
+        private Response lastSucResponse;
 
         public ResponseProcessor (int condition){
             this.condition = condition;
@@ -44,15 +44,12 @@ public class ReqRespProcessor {
 
         public void put (final Response response, final HttpClient client) throws IllegalArgumentException{
             try{
-                if (response.getStatus() == HTTP_CODE_OK ||
-                        response.getStatus() == HTTP_CODE_NOT_FOUND ||
-                        response.getStatus() == 403){
-                    ResponseHolder holder = new ResponseHolder(response, client);
+                if (response.getStatus() == HTTP_CODE_OK || response.getStatus() == HTTP_CODE_NOT_FOUND){
+                    if (response.getStatus() == HTTP_CODE_OK){
+                        lastSucResponse = response;
+                    }
 
-                    if (response.getStatus() == HTTP_CODE_OK)
-                        lastSucResponse = holder;
-
-                    this.responses.add(holder);
+                    responses.add(response);
                 }
             } catch (Exception e){
                 e.printStackTrace();
@@ -62,13 +59,7 @@ public class ReqRespProcessor {
 
         public Response getResponse() {
             if (getSuccessAckAmount() >= condition) {
-                return lastSucResponse.getResponse();
-//                if (getRemovedAmount() > 0) {
-//                    return new Response(Response.NOT_FOUND, Response.EMPTY);
-//                }
-//                else {
-//                    return lastSucResponse.getResponse();
-//                }
+                return lastSucResponse;
             }
             else
                 return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
@@ -76,50 +67,14 @@ public class ReqRespProcessor {
 
         public int getSuccessAckAmount(){
             int amount = 0;
-            for (ResponseHolder response : responses){
-                if (response.getResponse().getStatus() == HTTP_CODE_OK)
+            for (Response response: responses) {
+                if (response.getStatus() == HTTP_CODE_OK)
                     amount++;
             }
 
             return amount;
         }
 
-        public int getRemovedAmount() {
-            int amount = 0;
-            for (ResponseHolder response : responses){
-                if (response.getResponse().getStatus() == 403)
-                    amount++;
-            }
-
-            return amount;
-        }
-
-        private class ResponseHolder{
-            Response response;
-            HttpClient client;
-
-            public ResponseHolder (Response response, HttpClient client) {
-                this.response = response;
-                this.client = client;
-            }
-
-            public Response getResponse() {
-                return response;
-            }
-
-            public void setResponse(Response response) {
-                this.response = response;
-            }
-
-            public HttpClient getClient() {
-                return client;
-            }
-
-            public void setClient(HttpClient client) {
-                this.client = client;
-            }
-
-        }
     }
 
     public static class RequestProcessor {

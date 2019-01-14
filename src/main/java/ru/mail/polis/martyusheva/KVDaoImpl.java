@@ -9,8 +9,6 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.bytes;
-
 /**
  * Created by moresmart on 13.12.18.
  */
@@ -25,7 +23,7 @@ public class KVDaoImpl implements KVDao{
     }
 
     @Override
-    public byte[] get(byte[] key) throws IOException, NoSuchElementException {
+    public byte[] get(byte[] key) throws NoSuchElementException {
         byte[] value = db.get(key);
         if (value == null) {
             throw new NoSuchElementException();
@@ -35,7 +33,7 @@ public class KVDaoImpl implements KVDao{
     }
 
     @Override
-    public void upsert(byte[] key, byte[] value) throws IOException {
+    public void upsert(byte[] key, byte[] value) {
         db.put(key, value);
     }
 
