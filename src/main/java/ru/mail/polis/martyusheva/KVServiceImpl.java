@@ -23,7 +23,6 @@ public class KVServiceImpl extends HttpServer implements KVService{
     private HttpClient me = null;
 
     private RequestProcessor requestProcessor;
-    private final ConcurrentSkipListSet<String> removedValues = new ConcurrentSkipListSet<>();
     private static final String SPLITTER = " ";
 
     public KVServiceImpl(HttpServerConfig config, KVDao dao, Set<String> topology) throws IOException{
@@ -112,9 +111,6 @@ public class KVServiceImpl extends HttpServer implements KVService{
                 }
             }
 
-//            if (ack >= requestProcessor.getAck() )
-//                removedValues.remove(id);
-
             return ack >= requestProcessor.getAck() ?
                     new Response(Response.CREATED, Response.EMPTY) :
                     new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
@@ -139,7 +135,7 @@ public class KVServiceImpl extends HttpServer implements KVService{
                     responseProcessor.put(new Response(Response.INTERNAL_ERROR, Response.EMPTY), node);
                 }
             }
-            return removedValues.contains(id) ? new Response(Response.NOT_FOUND, Response.EMPTY) : responseProcessor.getResponse();
+            return responseProcessor.getResponse();
         }
     }
 
@@ -155,7 +151,6 @@ public class KVServiceImpl extends HttpServer implements KVService{
     private Response remove (final String id, final  boolean proxied){
         if (proxied){
             dao.remove(id.getBytes());
-            removedValues.add(id);
             return new Response(Response.ACCEPTED, Response.EMPTY);
         } else {
             ArrayList<HttpClient> nodes = getNodes(id);
@@ -171,9 +166,6 @@ public class KVServiceImpl extends HttpServer implements KVService{
                     //LOGGER?
                 }
             }
-
-            if (ack >= requestProcessor.getAck())
-                removedValues.add(id);
 
             return ack >= requestProcessor.getAck() ?
                     new Response(Response.ACCEPTED, Response.EMPTY) :

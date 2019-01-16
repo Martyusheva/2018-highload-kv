@@ -58,21 +58,23 @@ public class ReqRespProcessor {
         }
 
         public Response getResponse() {
-            if (getSuccessAckAmount() >= condition) {
-                return lastSucResponse;
+            if (responses.size() >= condition) {
+                if (containNotFound())
+                    return new Response(Response.NOT_FOUND, Response.EMPTY);
+                else
+                    return lastSucResponse;
             }
             else
                 return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
         }
 
-        public int getSuccessAckAmount(){
-            int amount = 0;
+        public boolean containNotFound() {
             for (Response response: responses) {
-                if (response.getStatus() == HTTP_CODE_OK)
-                    amount++;
+                if (response.getStatus() == HTTP_CODE_NOT_FOUND)
+                    return true;
             }
 
-            return amount;
+            return false;
         }
 
     }
