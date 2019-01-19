@@ -20,6 +20,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.iq80.leveldb/leveldb
     compile("org.iq80.leveldb:leveldb:0.10")
 
+    compile("org.projectlombok:lombok:1.18.2")
+    
     // JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.3.1")
