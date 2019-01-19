@@ -1,29 +1,27 @@
 package ru.mail.polis.martyusheva;
 
+import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.KVDao;
 
 import java.io.*;
 import java.util.*;
 
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.impl.Iq80DBFactory;
+import org.iq80.leveldb.*;
 
-/**
- * Created by moresmart on 13.12.18.
- */
 public class KVDaoImpl implements KVDao{
 
     private final DB db;
 
-    public KVDaoImpl(final File dir) throws IOException {
+    public KVDaoImpl(@NotNull final File dir) throws IOException {
         Options options = new Options();
         options.createIfMissing(true);
         db = Iq80DBFactory.factory.open(dir, options);
     }
 
+    @NotNull
     @Override
-    public byte[] get(byte[] key) throws NoSuchElementException {
+    public byte[] get(@NotNull byte[] key) throws NoSuchElementException {
         byte[] value = db.get(key);
         if (value == null) {
             throw new NoSuchElementException();
@@ -33,18 +31,17 @@ public class KVDaoImpl implements KVDao{
     }
 
     @Override
-    public void upsert(byte[] key, byte[] value) {
+    public void upsert(@NotNull byte[] key, @NotNull byte[] value) {
         db.put(key, value);
     }
 
     @Override
-    public void remove(byte[] key) {
-        db.delete(key);
+    public void remove(@NotNull byte[] key) {
+       db.delete(key);
     }
 
     @Override
     public void close() throws IOException {
         db.close();
     }
-
 }
