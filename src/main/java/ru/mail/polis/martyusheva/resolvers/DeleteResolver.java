@@ -10,15 +10,17 @@ import ru.mail.polis.martyusheva.cluster.ClusterConfig;
 
 import java.io.IOException;
 import java.util.List;
-
+import java.util.logging.Logger;
 import static ru.mail.polis.martyusheva.Utils.*;
 
 
 public class DeleteResolver implements RequestResolver {
+    private final Logger logger;
     private final ClusterConfig cluster;
 
     public DeleteResolver(ClusterConfig clusterConfig) {
         this.cluster = clusterConfig;
+        this.logger = Logger.getLogger(DeleteResolver.class.getName());
     }
 
     public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query)throws IOException {
@@ -39,14 +41,11 @@ public class DeleteResolver implements RequestResolver {
                     }
 
                 } catch (Exception e) {
-                    //LOGGER?
+                    logger.info(DeleteResolver.class.getName() + e.getMessage());
                 }
             }
 
-            if (clusterResponse.getSuccessAck() >= query.getAck())
-                session.sendResponse(new Response(Response.ACCEPTED, Response.EMPTY));
-            else
-                session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
+            sendResponse(session, query, clusterResponse);
         }
     }
 
@@ -55,6 +54,13 @@ public class DeleteResolver implements RequestResolver {
 
         HttpClient client = cluster.nodes().get(node);
         return client.delete(request, proxyHeaders);
+    }
+
+    private void sendResponse(@NotNull HttpSession session, @NotNull ClusterRequest query, ClusterResponse response) throws IOException {
+        if (response.getSuccessAck() >= query.getAck())
+            session.sendResponse(new Response(Response.ACCEPTED, Response.EMPTY));
+        else
+            session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
     }
 
 }

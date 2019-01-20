@@ -6,17 +6,21 @@ import one.nio.http.Response;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.martyusheva.cluster.ClusterConfig;
 import ru.mail.polis.martyusheva.cluster.ClusterRequest;
+import ru.mail.polis.martyusheva.cluster.ClusterResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static ru.mail.polis.martyusheva.Utils.*;
 
 public class PutResolver implements RequestResolver {
+    private final Logger logger;
     private final ClusterConfig cluster;
 
     public PutResolver(ClusterConfig clusterConfig) {
         this.cluster = clusterConfig;
+        this.logger = Logger.getLogger(PutResolver.class.getName());
     }
 
     public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query) throws IOException {
@@ -25,25 +29,21 @@ public class PutResolver implements RequestResolver {
             session.sendResponse(new Response(Response.CREATED, Response.EMPTY));
         } else {
             List<Integer> nodesForId = getNodesById(query.getId(), query.getFrom());
-
-            int ack = 0;
+            ClusterResponse clusterResponse = new ClusterResponse();
             for (Integer node: nodesForId){
                 try {
                     if (node == cluster.nodeId()) {
                         cluster.dao().upsert(query.getId().getBytes(), query.getValue());
-                        ack++;
+                        clusterResponse.addSuccessAck();
                     } else if (sendProxied(node, query.getId(), query.getValue()).getStatus() == 201) {
-                        ack++;
+                        clusterResponse.addSuccessAck();
                     }
                 } catch (Exception e){
-                    //LOGGER?
+                    logger.info(PutResolver.class.getName() + e.getMessage());
                 }
             }
 
-            if (ack >= query.getAck())
-                session.sendResponse(new Response(Response.CREATED, Response.EMPTY));
-            else
-                session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
+            sendResponse(session, query, clusterResponse);
         }
     }
 
@@ -52,6 +52,13 @@ public class PutResolver implements RequestResolver {
 
         HttpClient client = cluster.nodes().get(node);
         return client.put(request, body, proxyHeaders);
+    }
+
+    private void sendResponse(@NotNull HttpSession session, @NotNull ClusterRequest query, ClusterResponse response) throws IOException {
+        if (response.getSuccessAck() >= query.getAck())
+            session.sendResponse(new Response(Response.CREATED, Response.EMPTY));
+        else
+            session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
     }
 
 }

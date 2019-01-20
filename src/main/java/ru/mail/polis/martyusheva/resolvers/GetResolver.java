@@ -12,15 +12,18 @@ import ru.mail.polis.martyusheva.cluster.ClusterConfig;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
 import static ru.mail.polis.martyusheva.Utils.*;
 
 
 public class GetResolver implements RequestResolver {
+    private final Logger logger;
     private final ClusterConfig cluster;
 
     public GetResolver(ClusterConfig clusterConfig) {
         this.cluster = clusterConfig;
+        this.logger = Logger.getLogger(GetResolver.class.getName());
     }
 
     public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query) throws IOException{
@@ -37,7 +40,7 @@ public class GetResolver implements RequestResolver {
                     } else
                         clusterResponse.addResponse(proxiedGetClusterResponse(node, query.getId()));
                 } catch(Exception e){
-                    //LOGGER?
+                    logger.info(GetResolver.class.getName() + e.getMessage());
 
                 }
             }
@@ -46,20 +49,16 @@ public class GetResolver implements RequestResolver {
     }
 
 
-    private void sendResponse(@NotNull HttpSession session, @NotNull ClusterRequest query, ClusterResponse response) {
-        try {
-            if (response.getSuccessAck() >= query.getAck()) {
-                if (response.getNotFound() == response.getSuccessAck() || response.getRemoved() > 0)
-                    session.sendResponse(new Response(Response.NOT_FOUND, Response.EMPTY));
-                else if (response.getValue() != null)
-                    session.sendResponse(new Response(Response.OK, response.getValue()));
-                else
-                    session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
-            } else {
+    private void sendResponse(@NotNull HttpSession session, @NotNull ClusterRequest query, ClusterResponse response) throws IOException {
+        if (response.getSuccessAck() >= query.getAck()) {
+            if (response.getNotFound() == response.getSuccessAck() || response.getRemoved() > 0)
+                session.sendResponse(new Response(Response.NOT_FOUND, Response.EMPTY));
+            else if (response.getValue() != null)
+                session.sendResponse(new Response(Response.OK, response.getValue()));
+            else
                 session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
-            }
-        } catch (IOException ioe){
-
+        } else {
+            session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY));
         }
     }
 
