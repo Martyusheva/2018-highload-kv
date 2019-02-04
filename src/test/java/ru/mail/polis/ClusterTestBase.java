@@ -83,7 +83,7 @@ abstract class ClusterTestBase extends TestBase {
             @NotNull final String id,
             final int ack,
             final int from) {
-        return "/v0/entity?id=" + id + "&nodes=" + ack + "/" + from;
+        return "/v0/entity?id=" + id + "&replicas=" + ack + "/" + from;
     }
 
     Response get(
