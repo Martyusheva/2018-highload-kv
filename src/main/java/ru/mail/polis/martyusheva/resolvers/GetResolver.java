@@ -3,7 +3,6 @@ package ru.mail.polis.martyusheva.resolvers;
 import one.nio.http.HttpClient;
 import one.nio.http.HttpSession;
 import one.nio.http.Response;
-import one.nio.pool.PoolException;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.martyusheva.cluster.ClusterResponse;
 import ru.mail.polis.martyusheva.cluster.ClusterRequest;
@@ -26,7 +25,7 @@ public class GetResolver implements RequestResolver {
         this.logger = Logger.getLogger(GetResolver.class.getName());
     }
 
-    public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query) throws IOException{
+    public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query) throws IOException {
         if (query.isProxied()) {
             localGet(session, query);
         } else {
@@ -64,27 +63,22 @@ public class GetResolver implements RequestResolver {
 
     private ClusterResponse proxiedGetClusterResponse(int node, String id) throws Exception {
         ClusterResponse response = new ClusterResponse();
-        try {
-            String request = new StringBuilder().append(ENTITY_PATH).append(PARAMS_SYMBOL).append("id=").append(id).toString();
-            HttpClient client = cluster.nodes().get(node);
-            Response httpResponse = client.get(request, proxyHeaders);
-            if (httpResponse.getStatus() == 200) {
-                response.value(httpResponse.getBody());
-            } else if (httpResponse.getStatus() == 403) {
-                response.addRemoved();
-            } else if (httpResponse.getStatus() == 404) {
-                response.addNotFound();
-            }
-            response.addSuccessAck();
-
-        } catch (PoolException e) {
-            return response;
+        String request = new StringBuilder().append(ENTITY_PATH).append(PARAMS_SYMBOL).append("id=").append(id).toString();
+        HttpClient client = cluster.nodes().get(node);
+        Response httpResponse = client.get(request, proxyHeaders);
+        if (httpResponse.getStatus() == 200) {
+            response.value(httpResponse.getBody());
+        } else if (httpResponse.getStatus() == 403) {
+            response.addRemoved();
+        } else if (httpResponse.getStatus() == 404) {
+            response.addNotFound();
         }
+        response.addSuccessAck();
 
         return response;
     }
 
-    private ClusterResponse localGetClusterResponse(@NotNull ClusterRequest query) throws IOException{
+    private ClusterResponse localGetClusterResponse(@NotNull ClusterRequest query) throws IOException {
         ClusterResponse response = new ClusterResponse();
         try {
             if (cluster.removedIds().contains(query.getId())) {
