@@ -91,8 +91,8 @@ public class Utils {
         }
     }
 
-    public static ArrayList<Integer> getNodesById(@NotNull final String id, int from) {
-        ArrayList<Integer> result = new ArrayList<>();
+    public static List<Integer> getNodesById(@NotNull final String id, int from) {
+        List<Integer> result = new ArrayList<>();
 
         int base = abs(id.hashCode()) % from;
         for (int i = 0; i < from; i++) {
