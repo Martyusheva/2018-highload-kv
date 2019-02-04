@@ -38,7 +38,7 @@ public class GetResolver implements RequestResolver {
                         clusterResponse.addResponse(localGetClusterResponse(query));
                     } else
                         clusterResponse.addResponse(proxiedGetClusterResponse(node, query.getId()));
-                } catch(Exception e){
+                } catch(Exception e) {
                     logger.info(GetResolver.class.getName() + e.getMessage());
 
                 }

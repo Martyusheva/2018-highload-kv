@@ -24,13 +24,13 @@ public class PutResolver implements RequestResolver {
     }
 
     public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query) throws IOException {
-        if(query.isProxied()){
+        if(query.isProxied()) {
             cluster.dao().upsert(query.getId().getBytes(), query.getValue());
             session.sendResponse(new Response(Response.CREATED, Response.EMPTY));
         } else {
             List<Integer> nodesForId = getNodesById(query.getId(), query.getFrom());
             ClusterResponse clusterResponse = new ClusterResponse();
-            for (Integer node: nodesForId){
+            for (Integer node: nodesForId) {
                 try {
                     if (node == cluster.nodeId()) {
                         cluster.dao().upsert(query.getId().getBytes(), query.getValue());
@@ -38,7 +38,7 @@ public class PutResolver implements RequestResolver {
                     } else if (sendProxied(node, query.getId(), query.getValue()).getStatus() == 201) {
                         clusterResponse.addSuccessAck();
                     }
-                } catch (Exception e){
+                } catch (Exception e) {
                     logger.info(PutResolver.class.getName() + e.getMessage());
                 }
             }
@@ -47,7 +47,7 @@ public class PutResolver implements RequestResolver {
         }
     }
 
-    private Response sendProxied(Integer node, String id, byte[] body) throws Exception{
+    private Response sendProxied(Integer node, String id, byte[] body) throws Exception {
         String request = new StringBuilder().append(ENTITY_PATH).append(PARAMS_SYMBOL).append("id=").append(id).toString();
 
         HttpClient client = cluster.nodes().get(node);

@@ -42,7 +42,7 @@ public class ClusterResponse {
         this.removed++;
     }
 
-    public void addResponse(ClusterResponse response){
+    public void addResponse(ClusterResponse response) {
         this.successAck = this.successAck + response.getSuccessAck();
         this.notFound = this.notFound + response.getNotFound();
         this.removed = this.removed + response.getRemoved();

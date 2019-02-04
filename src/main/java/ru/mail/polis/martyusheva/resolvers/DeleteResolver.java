@@ -25,18 +25,18 @@ public class DeleteResolver implements RequestResolver {
 
     public void resolve(@NotNull final HttpSession session, @NotNull final ClusterRequest query)throws IOException {
         cluster.removedIds().add(query.getId());
-        if (query.isProxied()){
+        if (query.isProxied()) {
             cluster.dao().remove(query.getId().getBytes());
             session.sendResponse(new Response(Response.ACCEPTED, Response.EMPTY));
         } else {
             List<Integer> nodesForId = getNodesById(query.getId(), query.getFrom());
             ClusterResponse clusterResponse = new ClusterResponse();
-            for (Integer node: nodesForId){
+            for (Integer node: nodesForId) {
                 try {
                     if (node == cluster.nodeId()) {
                         cluster.dao().remove(query.getId().getBytes());
                         clusterResponse.addSuccessAck();
-                    } else if (sendProxied(node, query.getId()).getStatus() == 202){
+                    } else if (sendProxied(node, query.getId()).getStatus() == 202) {
                         clusterResponse.addSuccessAck();
                     }
 
@@ -49,7 +49,7 @@ public class DeleteResolver implements RequestResolver {
         }
     }
 
-    private Response sendProxied(Integer node, String id) throws Exception{
+    private Response sendProxied(Integer node, String id) throws Exception {
         String request = new StringBuilder().append(ENTITY_PATH).append(PARAMS_SYMBOL).append("id=").append(id).toString();
 
         HttpClient client = cluster.nodes().get(node);

@@ -17,12 +17,12 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import static ru.mail.polis.martyusheva.Utils.*;
 
-public class KVServiceImpl extends HttpServer implements KVService{
+public class KVServiceImpl extends HttpServer implements KVService {
     private final ClusterConfig clusterConfig;
 
     private final Map<Integer, RequestResolver> resolverMap;
 
-    public KVServiceImpl(final int port, final KVDao dao,final Set<String> topology) throws IOException{
+    public KVServiceImpl(final int port, final KVDao dao,final Set<String> topology) throws IOException {
         super(getConfig(port));
         clusterConfig = getClusterSettings(port, dao, topology);
         resolverMap = new HashMap<>();
@@ -50,13 +50,13 @@ public class KVServiceImpl extends HttpServer implements KVService{
     }
 
     @Path(STATUS_PATH)
-    public void status(Request request, HttpSession session) throws IOException{
+    public void status(Request request, HttpSession session) throws IOException {
         session.sendResponse(Response.ok(Response.EMPTY));
     }
 
 
     @Path(ENTITY_PATH)
-    public void entity(Request request, HttpSession session) throws IOException{
+    public void entity(Request request, HttpSession session) throws IOException {
         try {
             ClusterRequest query = processRequest(request, clusterConfig.nodes().size());
 
@@ -70,7 +70,7 @@ public class KVServiceImpl extends HttpServer implements KVService{
 
             final int method = request.getMethod();
             RequestResolver resolver = resolverMap.get(method);
-            if (resolver == null){
+            if (resolver == null) {
                 session.sendError(Response.METHOD_NOT_ALLOWED, null);
             } else {
                 resolver.resolve(session, query);

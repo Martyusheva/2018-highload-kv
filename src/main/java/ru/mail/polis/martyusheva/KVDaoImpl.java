@@ -9,7 +9,7 @@ import java.util.*;
 
 import org.iq80.leveldb.*;
 
-public class KVDaoImpl implements KVDao{
+ public class KVDaoImpl implements KVDao {
 
     private final DB db;
 
