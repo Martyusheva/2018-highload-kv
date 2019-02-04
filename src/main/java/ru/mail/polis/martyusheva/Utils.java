@@ -26,7 +26,7 @@ public class Utils {
     private static final String EQUALS = "=";
     private static final String DELIMITER = "/";
     private static final String ENCODING = "UTF-8";
-    private static final String REPLICAS = "nodes";
+    private static final String REPLICAS = "replicas";
     private static final String INVALID_QUERY = "Invalid query";
 
     public static final String[] proxyHeaders;
